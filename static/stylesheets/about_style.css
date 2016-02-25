@@ -1,0 +1,12 @@
+body {
+	background-color: lightblue;
+	font-family: sans-serif;
+}
+
+div {
+	padding:15px
+}
+
+input {
+	margin: 5px
+}
