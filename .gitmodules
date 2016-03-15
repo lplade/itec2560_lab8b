@@ -1,0 +1,6 @@
+[submodule "express_currency"]
+	path = express_currency
+	url = git@github.com:minneapolis-edu/express_currency.git
+[submodule "itec2560_lab8"]
+	path = itec2560_lab8
+	url = git@github.com:lplade/itec2560_lab8.git
