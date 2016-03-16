@@ -6,16 +6,18 @@ var moment = require('moment');
 
 var baseURL = 'https://openexchangerates.org/api/latest.json' ;
 
+//Default conversion rates - current as of 24 Feb 2016
+var conversions = {"USD":1.0, "GBP": 0.72, "EUR": 0.91};
 
 /* GET the app's home page */
 router.get('/', homepage);
-
+Our conversion
 /*function homepage(req, res){
  res.send("Currency site");
  }*/
 
 function homepage(req, res) {
-	res.render('index');
+	res.render('index', { title: 'Larry currency converter'});
 }
 
 /* GET request, for form submit */
@@ -31,15 +33,17 @@ function convert(req, res) {
 
 	console.log("query was: convert " + money + " to " + convertTo);
 
-	//Our conversion rates - current as of 24 Feb 2016
-	var conversions = {"USD":1.0, "GBP": 0.72, "EUR": 0.91};
+	//populate the conversions object with current rates
+	oxrRequest(res, "USD");
 
 	//convert price into dollars, then into desired currency.
+	//TODO rewrite this to just query appropriate base currency and get direct result
 	var baseUSD = money / conversions[convertFrom];
 	console.log("Internal conversion $" + baseUSD);
 	var conversionRate = conversions[convertTo];
-
 	var convertedVal = conversionRate * baseUSD;
+
+
 
 	res.render('result', {
 		startmoney: money,
@@ -85,29 +89,24 @@ Return format: (HTTP 200 OK)
 
 */
 
-
-
-// based on astropix lab
-function oxrRequest(httpRes, base) {
+// method based on astropix lab
+function oxrRequest(res, base) {
 	var queryParam = {};
 	var APPID = process.env.OXR_APP_KEY;
 
-	if (base) {
-		queryParam = {
-			'app_id' : APPID,
-			'base' : base
-		};
-	}
-	else {
-		queryParam = {'app_id' : APPID };
-	}
+	queryParam = {
+		'app_id' : APPID,
+		'base' : base
+		//'symbols' : "USD,GBP,EUR" maybe only for paid users
+	};
 
 	request( {uri :baseURL, qs: queryParam} , function(error, oxr_response, body){
 		if (!error && oxr_response.statusCode == 200){
 			//request worked
 			oxrJSON = JSON.parse(body);
 			conversions.USD = oxrJSON.rates.USD;
-			//TODO pick up here
+			conversions.GBP = oxrJSON.rates.GBP;
+			conversions.EUR = oxrJSON.rates.EUR;
 
 		}
 		else {
@@ -115,7 +114,7 @@ function oxrRequest(httpRes, base) {
 			console.log("Error in JSON request: " + error);
 			console.log(oxr_response);
 			console.log(body);
-			httpRes.render('oxrError');
+			res.render('oxrError');
 		}
 	});
 }
