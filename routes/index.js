@@ -6,12 +6,12 @@ var moment = require('moment');
 
 var baseURL = 'https://openexchangerates.org/api/latest.json' ;
 
-//Default conversion rates - current as of 24 Feb 2016
-var conversions = {"USD":1.0, "GBP": 0.72, "EUR": 0.91};
+//Default conversion rates - crazy so we can tell if it fails
+var conversions = {"USD":111111, "GBP": 222222, "EUR": 33333};
 
 /* GET the app's home page */
 router.get('/', homepage);
-Our conversion
+
 /*function homepage(req, res){
  res.send("Currency site");
  }*/
@@ -24,6 +24,15 @@ function homepage(req, res) {
 router.get('/convert', convert);
 
 function convert(req, res) {
+
+	//populate the conversions object with current rates
+	//do this before below assignment
+	oxrRequest(res, "USD");
+
+	console.log(conversions);
+	//TODO this is not working right
+	//Need to wait for oxrRequest to finish before proceeding?
+
 	//Data send as a post request is available in the
 	//body.query attribute; properties same as names in form
 
@@ -33,8 +42,7 @@ function convert(req, res) {
 
 	console.log("query was: convert " + money + " to " + convertTo);
 
-	//populate the conversions object with current rates
-	oxrRequest(res, "USD");
+
 
 	//convert price into dollars, then into desired currency.
 	//TODO rewrite this to just query appropriate base currency and get direct result
@@ -91,8 +99,9 @@ Return format: (HTTP 200 OK)
 
 // method based on astropix lab
 function oxrRequest(res, base) {
+	console.log("Requesting rates...");
 	var queryParam = {};
-	var APPID = process.env.OXR_APP_KEY;
+	var APPID = process.env.OXR_APP_ID;
 
 	queryParam = {
 		'app_id' : APPID,
@@ -103,10 +112,13 @@ function oxrRequest(res, base) {
 	request( {uri :baseURL, qs: queryParam} , function(error, oxr_response, body){
 		if (!error && oxr_response.statusCode == 200){
 			//request worked
+			console.log("HTTP 200");
 			oxrJSON = JSON.parse(body);
 			conversions.USD = oxrJSON.rates.USD;
 			conversions.GBP = oxrJSON.rates.GBP;
 			conversions.EUR = oxrJSON.rates.EUR;
+			console.log(conversions);
+			//TODO this is working right
 
 		}
 		else {
