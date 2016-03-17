@@ -18,19 +18,35 @@ router.get('/', homepage);
 
 function homepage(req, res) {
 	res.render('index', { title: 'Larry currency converter'});
+//populate the conversions object with current rates
+//do this before below assignment
+	oxrRequest(res, "USD", function(){
+		conversions.USD = this.rates.USD;
+		conversions.GBP = this.rates.GBP;
+		conversions.EUR = this.rates.EUR;
+		console.log("callback!");
+	});
+	//TODO cheap hack; will still break if API call takes longer than it takes to submit form
 }
 
 /* GET request, for form submit */
 router.get('/convert', convert);
 
-function convert(req, res) {
 
-	//populate the conversions object with current rates
+
+function convert(req, res) {
+//moved this into homepage function
+/*	//populate the conversions object with current rates
 	//do this before below assignment
-	oxrRequest(res, "USD");
+	oxrRequest(res, "USD", function(){
+		conversions.USD = this.rates.USD;
+		conversions.GBP = this.rates.GBP;
+		conversions.EUR = this.rates.EUR;
+		console.log("callback!");
+	});*/
 
 	console.log(conversions);
-	//TODO this is not working right
+
 	//Need to wait for oxrRequest to finish before proceeding?
 
 	//Data send as a post request is available in the
@@ -98,12 +114,11 @@ Return format: (HTTP 200 OK)
 */
 
 // method based on astropix lab
-function oxrRequest(res, base) {
+function oxrRequest(res, base, callback) {
 	console.log("Requesting rates...");
-	var queryParam = {};
 	var APPID = process.env.OXR_APP_ID;
 
-	queryParam = {
+	var queryParam = {
 		'app_id' : APPID,
 		'base' : base
 		//'symbols' : "USD,GBP,EUR" maybe only for paid users
@@ -114,10 +129,7 @@ function oxrRequest(res, base) {
 			//request worked
 			console.log("HTTP 200");
 			oxrJSON = JSON.parse(body);
-			conversions.USD = oxrJSON.rates.USD;
-			conversions.GBP = oxrJSON.rates.GBP;
-			conversions.EUR = oxrJSON.rates.EUR;
-			console.log(conversions);
+			callback.call(oxrJSON);
 			//TODO this is working right
 
 		}
